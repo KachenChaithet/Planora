@@ -341,6 +341,17 @@ export const ProjectRouter = createTRPCRouter({
                 data: { status: 'REJECTED' }
             })
 
+        }),
+    listForFilter: protectedProcedure.query(async ({ ctx }) => {
+        return prisma.project.findMany({
+            where: {
+                projectMembers: {
+                    some: { userId: ctx.user.id },
+                },
+            },
+            select: { id: true, name: true },
+            orderBy: { name: "asc" },
         })
+    })
 
 })
