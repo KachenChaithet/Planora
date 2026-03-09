@@ -1,0 +1,5 @@
+procs:
+  next:
+    cmd: ["cmd", "/c", "npm run dev"]
+  socket:
+    cmd: ["cmd", "/c", "npx tsx src/app/features/mytasks/server/socket.ts"]

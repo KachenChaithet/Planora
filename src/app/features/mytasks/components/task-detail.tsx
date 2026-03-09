@@ -5,16 +5,20 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Textarea } from "@/components/ui/textarea"
+import { authClient } from "@/lib/auth-client"
+import { socket } from "@/lib/socket"
 import { trpc } from "@/trpc/client"
 import { AppRouter } from "@/trpc/routers/_app"
 import { inferRouterOutputs } from "@trpc/server"
 import { formatDistanceToNow } from "date-fns"
-import { BookCopy, Calendar1, MessageSquare, Pencil, Send, SendHorizonal, Share2, X } from "lucide-react"
+import { BookCopy, Calendar1, FolderClosed, MessageSquare, Pencil, Send, SendHorizonal, Share2, X } from "lucide-react"
 import Image from "next/image"
 import Link from "next/link"
+import { useEffect, useRef, useState } from "react"
 
 type RouterOutputs = inferRouterOutputs<AppRouter>
 type Task = RouterOutputs["tasks"]["getDetailTask"]
+type Comments = RouterOutputs["tasks"]["getTaskComments"][number]
 type TaskDetailHeaderProps = {
     task: Task
 }
@@ -24,8 +28,8 @@ export const TaskDetailHeader = ({ task }: TaskDetailHeaderProps) => {
             <div className="flex items-center justify-between">
                 <div>
                     <h1 className="text-2xl font-semibold">{task?.title}</h1>
-                    <p className="text-sm text-muted-foreground">
-                        {task?.project.name} • Task ID: {task?.id}
+                    <p className="text-sm text-muted-foreground flex  items-center gap-2">
+                        <FolderClosed className="size-4" /> {task?.project.name} • Task ID: {task?.id}
                     </p>
                 </div>
 
@@ -90,7 +94,7 @@ export const TaskDetailsSection = ({ task }: { task: Task }) => {
                     {task?.activityLogs.map((a) => {
                         const name = a.name?.split(" ").map((n, i) => (i === 0 ? n : `${n[0]}.`)).join(" ")
                         return (
-                            <div className="flex items-start gap-3 ">
+                            <div className="flex items-start gap-3 " key={a.id}>
                                 <div className="h-8 w-8 rounded-full bg-muted flex items-center justify-center">
                                     <Pencil className="h-4 w-4" />
                                 </div>
@@ -118,15 +122,28 @@ export const TaskDetailsSection = ({ task }: { task: Task }) => {
         </div >
     )
 }
-
-const CommnetInput = () => {
+type CommnetInputprops = {
+    message: string
+    setMessage: (message: string) => void
+    onSubmit: () => void
+}
+const CommnetInput = ({ message, setMessage, onSubmit }: CommnetInputprops) => {
+    const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
+        if (e.key === "Enter" && !e.shiftKey) {
+            e.preventDefault()
+            onSubmit()
+        }
+    }
     return (
         <div className="bg-white p-4 border flex items-end gap-2">
             <Textarea
                 placeholder="Write a comment..."
                 className="resize-none min-h-10 max-h-50"
+                value={message}
+                onChange={(value) => setMessage(value.target.value)}
+                onKeyDown={handleKeyDown}
             />
-            <Button>
+            <Button onClick={onSubmit}>
                 <SendHorizonal className=" text-white size-4 rounded-md" />
             </Button>
         </div>
@@ -147,20 +164,32 @@ const CommentEmptyState = () => {
     )
 }
 
-const CommentItem = () => {
+type CommentItemProps = {
+    comment: Comments
+}
+const CommentItem = ({ comment }: CommentItemProps) => {
+    const { data: session } = authClient.useSession()
+
+
+    const isMe = comment.author.id === session?.user.id
+    const name = comment.author.name?.split(" ").map((n, i) => n[0]).join('').toUpperCase()
+
     return (
         <>
-            <div className="flex gap-2 ">
+            <div className={`flex gap-2 ${isMe ? 'flex-row-reverse' : 'flex-row'}`}>
                 <Avatar className="h-8 w-8">
-                    <AvatarFallback className="bg-white">hi</AvatarFallback>
+                    <AvatarImage src={comment.author.image ?? "Unknow User"} />
+                    <AvatarFallback className="bg-white">{name}</AvatarFallback>
                 </Avatar>
-                <div className="">
-
-
-                    <div className="flex-1 rounded-2xl rounded-tl-none  max-w-140  bg-white p-4 text-sm">
-                        <h1>text message text message text message text message text message text message </h1>
+                <div className={`flex flex-col ${isMe ? 'items-end' : 'items-start'} gap-1`}>
+                    <div className={`inline-block max-w-140  p-4 text-sm break-all 
+                    ${isMe
+                            ? 'rounded-2xl rounded-tr-none bg-primary text-white'
+                            : "rounded-2xl rounded-tl-none bg-white "
+                        } `}>
+                        {comment.message}
                     </div>
-                    <span className="text-xs text-muted-foreground">Kachen.•1H AGO</span>
+                    <span className="text-xs text-muted-foreground ">{comment.author.name} • {formatDistanceToNow(new Date(comment.createdAt), { addSuffix: true })}</span>
                 </div>
 
             </div>
@@ -168,19 +197,28 @@ const CommentItem = () => {
     )
 }
 
-export const TaskDetailComments = ({ task }: { task: Task }) => {
-    const comments = task?.comments ?? []
+export const TaskDetailComments = ({ comments }: { comments: Comments[] }) => {
+    const bottomRef = useRef<HTMLDivElement>(null)
+
+    useEffect(() => {
+        bottomRef.current?.scrollIntoView({ behavior: 'smooth' })
+    }, [comments])
     return (
         <div className="space-y-4 flex flex-col h-140 ">
             <header className="flex justify-between">
                 <h1 className="font-semibold text-primary text-lg tracking-wide uppercase">COLLABORATION</h1>
-                <Badge>3 comment</Badge>
+                <Badge>{comments.length} comment</Badge>
             </header>
-            <main className="flex-1 max-h-130 overflow-auto ">
+            <main className="flex-1 max-h-130 overflow-auto flex flex-col gap-4">
                 {comments.length > 0
-                    ? <CommentItem />
+                    ? (
+                        comments.map((c) => (
+                            <CommentItem key={c.id} comment={c} />
+                        ))
+                    )
                     : <CommentEmptyState />
                 }
+                <div ref={bottomRef} />
             </main>
 
 
@@ -193,11 +231,48 @@ export const TaskDetailComments = ({ task }: { task: Task }) => {
 
 export const TaskDetailContainer = ({ children, taskId }: { children: React.ReactNode, taskId: string }) => {
     const { data } = trpc.tasks.getDetailTask.useQuery({ taskId })
-    console.log(data);
+    const [form, setForm] = useState({
+        message: ''
+    })
+    const utils = trpc.useUtils()
+    const { mutate: createComment } = trpc.tasks.createComment.useMutation({
+        onSuccess: (comment) => {
+            socket.emit("send-comment", comment)
+        }
+    })
+    const { data: comments = [] } = trpc.tasks.getTaskComments.useQuery({ taskId })
+
+    useEffect(() => {
+        socket.emit('join-task', taskId)
+        const handleNewComment = (comment: Comments) => {
+            utils.tasks.getTaskComments.setData({ taskId }, (old) => {
+                if (!old) return [comment]
+
+                const exists = old.some((c) => c.id === comment.id)
+                if (exists) return old
+
+                return [...old, comment]
+            })
+        }
+        socket.on("new-comment", handleNewComment)
+
+        return () => {
+            socket.off('new-comment', handleNewComment)
+            socket.emit('leave-task', taskId)
+        }
+
+    }, [taskId, utils])
 
     if (!data) {
         return <div className="p-10">Loading...</div>
     }
+
+    const handleSubmitComment = () => {
+        createComment({ message: form.message, taskId })
+        setForm((prev) => ({ ...prev, message: '' }))
+    }
+
+
     return (
         <EntityContainer
             header={<TaskDetailHeader task={data} />}
@@ -209,10 +284,10 @@ export const TaskDetailContainer = ({ children, taskId }: { children: React.Reac
 
                 <div className="flex-1 border-l border-border bg-muted flex flex-col -mr-10">
                     <div className="pl-10 pr-10 pt-10 ">
-                        <TaskDetailComments task={data} />
+                        <TaskDetailComments comments={comments} />
                     </div>
 
-                    <CommnetInput />
+                    <CommnetInput onSubmit={handleSubmitComment} message={form.message} setMessage={(msg) => setForm((prev) => ({ ...prev, message: msg }))} />
                 </div>
             </div>
 

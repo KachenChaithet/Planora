@@ -384,16 +384,7 @@ export const TaskRouter = createTRPCRouter({
 
                         }
                     },
-                    comments: {
-                        orderBy: {
-                            createdAt: "asc"
-                        },
-                        select: {
-                            id: true,
-                            author: true,
-                            createdAt: true,
-                        }
-                    }
+
                 },
 
             })
@@ -474,7 +465,57 @@ export const TaskRouter = createTRPCRouter({
                 ...task,
                 activityLogs: activities
             }
-        })
+        }),
+    getTaskComments: protectedProcedure
+        .input(z.object({ taskId: z.string() }))
+        .query(async ({ ctx, input }) => {
+            const comments = await prisma.comment.findMany({
+                where: {
+                    taskId: input.taskId
+                },
+                include: {
+                    author: true
+                }
+            })
+
+            return comments.map((c) => ({
+                id: c.id,
+                message: c.content,
+                author: {
+                    id: c.author.id,
+                    name: c.author.name,
+                    image: c.author.image
+                },
+                createdAt: c.createdAt
+            }))
+        }),
+    createComment: protectedProcedure
+        .input(z.object({ message: z.string().min(1), taskId: z.string() }))
+        .mutation(async ({ ctx, input }) => {
+            const comment = await prisma.comment.create({
+                data: {
+                    content: input.message,
+                    authorId: ctx.user.id,
+                    taskId: input.taskId,
+                },
+                include: {
+                    author: true  // ✅ include author
+                }
+            })
+
+            // ✅ return shape เดียวกับ getTaskComments
+            return {
+                id: comment.id,
+                message: comment.content,
+                taskId: comment.taskId,
+                author: {
+                    id: comment.author.id,
+                    name: comment.author.name,
+                    image: comment.author.image
+                },
+                createdAt: comment.createdAt
+            }
+        }),
 
     // remove: protectedProcedure
     //     .input(z.object({ id: z.string() }))
