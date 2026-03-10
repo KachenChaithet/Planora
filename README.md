@@ -1,4 +1,4 @@
-# Task Management System
+# Planora - Task Management System
 
 A full-stack task management application designed for managing projects, assigning tasks, and collaborating with team members.
 The system supports task workflows, comments, filtering, and project-based collaboration.
