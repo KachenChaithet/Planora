@@ -1,9 +1,5 @@
 # Task Management System
 
-<p align="center">
-  <img src="public/images/dashboard.jpg" width="900">
-</p>
-
 A full-stack task management application designed for managing projects, assigning tasks, and collaborating with team members.
 The system supports task workflows, comments, filtering, and project-based collaboration.
 
