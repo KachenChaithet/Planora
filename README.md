@@ -54,7 +54,7 @@ Overview of tasks, upcoming deadlines, and project statistics.
 Manage projects and view tasks within each project.
 
 <p align="center">
-  <img src="public/images/projects.png" width="850">
+  <img src="public/images/project.png" width="850">
 </p>
 
 ## My Tasks
