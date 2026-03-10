@@ -43,28 +43,35 @@ The system supports task workflows, comments, filtering, and project-based colla
 
 ## Dashboard
 
+Overview of tasks, upcoming deadlines, and project statistics.
+
 <p align="center">
   <img src="public/images/dashboard.png" width="850">
 </p>
 
-<!-- Add more screenshots if you have them -->
+## Projects
 
-<!--
-## Create Task
+Manage projects and view tasks within each project.
+
 <p align="center">
-  <img src="public/images/create-task.jpg" width="850">
+  <img src="public/images/projects.png" width="850">
 </p>
 
-## Task Detail
+## My Tasks
+
+View tasks assigned to you or tasks you created with filtering options.
+
 <p align="center">
-  <img src="public/images/task-detail.jpg" width="850">
+  <img src="public/images/mytasks.png" width="850">
 </p>
 
-## Comments System
+## Activity
+
+Track recent actions such as task updates, comments, and status changes.
+
 <p align="center">
-  <img src="public/images/comments.jpg" width="850">
+  <img src="public/images/activity.png" width="850">
 </p>
--->
 
 ---
 
