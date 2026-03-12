@@ -109,10 +109,10 @@ const AppSidebar = () => {
                                                 ? pathname === "/"
                                                 : pathname.startsWith(item.url)
                                         }
-                                        className="gap-x-4 h-10 px-4 "
+                                        className="gap-x-4 h-10 px-4  "
                                         asChild
                                     >
-                                        <Link href={item.url} prefetch>
+                                        <Link href={item.url} prefetch >
                                             <item.icon className="size-4" />
                                             <span>{item.title}</span>
 

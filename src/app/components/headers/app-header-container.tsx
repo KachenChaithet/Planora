@@ -9,6 +9,7 @@ import { useNotifications } from "../hooks/use-notification"
 import { useEffect } from "react"
 import { socket } from "@/lib/socket"
 import { authClient } from "@/lib/auth-client"
+import { registerPush } from "@/app/features/notifications/hooks/use-push"
 
 export const AppHeaderContainer = () => {
 
@@ -37,6 +38,23 @@ export const AppHeaderContainer = () => {
 
     }, [userId, utils])
     const unreadCount = data.filter(n => !n.read).length ?? 0
+    useEffect(() => {
+
+        if ("serviceWorker" in navigator) {
+            navigator.serviceWorker.register("/sw.js")
+        }
+
+        if (Notification.permission === "default") {
+            Notification.requestPermission().then((permission) => {
+                if (permission === "granted") {
+                    registerPush()
+                }
+            })
+        } else if (Notification.permission === "granted") {
+            registerPush()
+        }
+
+    }, [])
     return (
         <div className="flex items-center gap-4">
             <Popover>
