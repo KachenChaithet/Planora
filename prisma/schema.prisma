@@ -32,6 +32,7 @@ model User {
   activityLogs        ActivityLog[]
   comments            Comment[]
   notifications       Notification[]
+  pushSubscriptions   PushSubscription[]
 
   @@map("user")
 }
@@ -218,6 +219,16 @@ enum NotificationType {
   TASK_COMMENT
   TASK_COMPLETED
   TASK_DUE
+}
+
+model PushSubscription {
+  id     String @id @default(cuid())
+  userId String
+
+  user     User   @relation(fields: [userId], references: [id])
+  endpoint String @unique
+  p256dh   String
+  auth     String
 }
 
 model Session {

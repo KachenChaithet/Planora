@@ -5,9 +5,11 @@ export const registerNotificationEvents = (io: Server, socket: Socket) => {
         socket.join(`user:${userId}`)
     })
 
+    socket.on("notification:new", ({ userId, notification }) => {
 
+        io.to(`user:${userId}`).emit("notification:new", notification)
 
-
+    })
     socket.on("leave-user", (userId: string) => {
         socket.leave(`user:${userId}`)
     })

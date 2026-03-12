@@ -1,6 +1,8 @@
 import { NotificationType } from "@/generated/prisma/enums"
 import { prisma } from "@/lib/db"
-import { io } from ".."
+import { getIO } from "../socket-instance"
+import { socket } from "@/lib/socket"
+import { sendPush } from "@/lib/webpush"
 
 type CreateNotificationParams = {
     userId: string
@@ -21,10 +23,17 @@ export const createNotification = async ({
             link
         }
     })
-
-    console.log('hey');
+    const subscriptions = await prisma.pushSubscription.findMany({
+        where: {
+            userId
+        }
+    })
     
-    io.to(`user:${userId}`).emit("notification:new", notification)
+    for (const sub of subscriptions) {
+        await sendPush(sub, notification)
+    }
+
+    socket.emit('notification:new', { userId, notification })
 
     return notification
 }

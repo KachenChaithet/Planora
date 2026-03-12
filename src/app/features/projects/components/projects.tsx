@@ -305,7 +305,7 @@ export const ProjectCard = ({ title, description, avatars, progress, completedTa
 
 
     return (
-        <Card className="max-w-xs">
+        <Card className="max-w-xs ">
             <CardHeader className="flex items-center justify-between">
                 <div className="w-8 h-8 bg-blue-200 flex items-center justify-center rounded-md text-blue-700">
                     <Banknote />
@@ -315,6 +315,7 @@ export const ProjectCard = ({ title, description, avatars, progress, completedTa
                         <button className="p-1 rounded hover:bg-muted">
                             <EllipsisVerticalIcon className="size-4" />
                         </button>
+
                     </DropdownMenuTrigger>
 
                     <DropdownMenuContent align="end">
@@ -335,6 +336,7 @@ export const ProjectCard = ({ title, description, avatars, progress, completedTa
 
                         />
 
+
                         <DropdownMenuItem
                             onClick={handleRemove}
                             className="text-red-500"
@@ -344,10 +346,9 @@ export const ProjectCard = ({ title, description, avatars, progress, completedTa
                     </DropdownMenuContent>
                 </DropdownMenu>
             </CardHeader>
-            <CardContent>
+            <CardContent >
                 <h1 className="font-semibold">{title}</h1>
                 <p className="text-muted-foreground">{description}</p>
-
             </CardContent>
             <CardFooter className="flex flex-col gap-4">
                 <div className="flex items-end justify-center flex-col w-full">
@@ -452,7 +453,7 @@ export const ProjectContainer = ({ children }: ProjectContainerProps) => {
             <div className="grid md:grid-cols-4 grid-cols-1 gap-4">
                 {
                     isProjects ? (
-                        <Spinner className="size-8 text-muted-foreground"/>
+                        <Spinner className="size-8 text-muted-foreground" />
                     ) : (
                         <ProjectList projects={projects} />
                     )

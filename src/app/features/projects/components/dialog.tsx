@@ -211,7 +211,7 @@ const ListProjectCard = ({ Icon, projectName, owner, projectId, status }: ListPr
         }
     }
     return (
-        <Card className="w-full p-2">
+        <Card className="w-full p-2 ">
             <div className="flex items-center justify-between">
                 <div className="flex items-center gap-3">
 
