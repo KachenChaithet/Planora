@@ -494,5 +494,79 @@ export const ProjectRouter = createTRPCRouter({
             }
 
             return mappedProjects
-        })
+        }),
+    getMembers: protectedProcedure
+        .input(z.object({ projectId: z.string() }))
+        .query(async ({ ctx, input }) => {
+            const isMember = await prisma.projectMember.findFirst({
+                where: { projectId: input.projectId, userId: ctx.user.id }
+            })
+            if (!isMember) throw new TRPCError({ code: "FORBIDDEN" })
+
+            return prisma.projectMember.findMany({
+                where: { projectId: input.projectId },
+                include: {
+                    user: { select: { id: true, name: true, email: true, image: true } }
+                }
+            })
+        }),
+    searchUsers: protectedProcedure
+        .input(z.object({ query: z.string(), projectId: z.string() }))
+        .query(async ({ ctx, input }) => {
+            if (input.query.length < 2) return []
+
+            return prisma.user.findMany({
+                where: {
+                    OR: [
+                        { name: { contains: input.query, mode: "insensitive" } },
+                        { id: { contains: input.query, mode: "insensitive" } },
+                        { email: { contains: input.query, mode: "insensitive" } }
+                    ],
+                    // ไม่แสดง user ที่เป็น member อยู่แล้ว
+                    NOT: {
+                        projectMembers: { some: { projectId: input.projectId } }
+                    }
+                },
+                select: { id: true, name: true, email: true, image: true },
+                take: 10
+            })
+        }),
+    // 3. เพิ่ม member เข้า project โดยตรง (owner only)
+    addMember: protectedProcedure
+        .input(z.object({ projectId: z.string(), userId: z.string() }))
+        .mutation(async ({ ctx, input }) => {
+            const isOwner = await prisma.projectMember.findFirst({
+                where: { projectId: input.projectId, userId: ctx.user.id, role: "OWNER" }
+            })
+            if (!isOwner) throw new TRPCError({ code: "FORBIDDEN" })
+
+            await prisma.projectMember.create({
+                data: { projectId: input.projectId, userId: input.userId, role: "MEMBER" }
+            })
+
+            await createNotification({
+                userId: input.userId,
+                link: "/projects",
+                type: "PROJECT_MEMBER_ADDED"
+            })
+
+            return { success: true }
+        }),
+
+    // 4. kick member ออกจาก project (owner only)
+    removeMember: protectedProcedure
+        .input(z.object({ projectId: z.string(), userId: z.string() }))
+        .mutation(async ({ ctx, input }) => {
+            const isOwner = await prisma.projectMember.findFirst({
+                where: { projectId: input.projectId, userId: ctx.user.id, role: "OWNER" }
+            })
+            if (!isOwner) throw new TRPCError({ code: "FORBIDDEN" })
+
+            await prisma.projectMember.delete({
+                where: { userId_projectId: { userId: input.userId, projectId: input.projectId } }
+            })
+
+            return { success: true }
+        }),
+
 })
