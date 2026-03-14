@@ -24,15 +24,17 @@ export const MembersSettings = ({ projectId }: Props) => {
         { enabled: searchQuery.length >= 2 }
     )
 
-    const addMember = trpc.projects.addMember.useMutation({
+
+
+    // เป็น
+    const inviteMember = trpc.projects.inviteUser.useMutation({
         onSuccess: () => {
-            toast.success("Member added")
+            toast.success("Invite sent")  // ← เปลี่ยน message
             setSearchQuery("")
             refetch()
         },
         onError: (err) => toast.error(err.message)
     })
-
     const removeMember = trpc.projects.removeMember.useMutation({
         onSuccess: () => {
             toast.success("Member removed")
@@ -72,12 +74,14 @@ export const MembersSettings = ({ projectId }: Props) => {
                                         <p className="text-xs text-muted-foreground">{user.email}</p>
                                     </div>
                                 </div>
+
+
                                 <Button
                                     size="sm"
-                                    disabled={addMember.isPending}
-                                    onClick={() => addMember.mutate({ projectId, userId: user.id })}
+                                    disabled={inviteMember.isPending}
+                                    onClick={() => inviteMember.mutate({ projectId, userId: user.id })}
                                 >
-                                    Add
+                                    Invite  
                                 </Button>
                             </div>
                         ))}
