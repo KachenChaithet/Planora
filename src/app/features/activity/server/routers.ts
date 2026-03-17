@@ -254,6 +254,18 @@ export const activityRouter = createTRPCRouter({
                                 isSystem: !a.actor,
                                 dateKey: a.createdAt.toISOString().split("T")[0],
                             }
+                        case "TASK_PRIORITY_CHANGED":
+                            return {
+                                id: a.id,
+                                name: a.actor?.name ?? "Unknown User",
+                                action: "task priority changed",
+                                target: a.task?.title ?? 'Unknow Task',
+                                targetId: a.task?.id,
+                                createdAt: a.createdAt,
+                                category: a.type,
+                                isSystem: !a.actor,
+                                dateKey: a.createdAt.toISOString().split("T")[0],
+                            }
                         default:
                             return {
                                 id: a.id,

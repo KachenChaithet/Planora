@@ -277,6 +277,8 @@ export const ActivityContainer = ({ children }: { children: React.ReactNode }) =
     const { data: projects } = trpc.projects.listForFilter.useQuery()
     const { data: users } = trpc.activity.listForFilter.useQuery()
 
+
+
     const projectOptions = projects?.map((p) => ({
         value: p.id,
         label: p.name
@@ -288,7 +290,10 @@ export const ActivityContainer = ({ children }: { children: React.ReactNode }) =
         isFetchingNextPage,
         isLoading } = useInfiniteActivities(filters)
 
-    console.log("activities count:", activities.length)
+
+
+    console.log("activities count:", activities)
+    console.log("activities count:", activities)
     const userOptions = users?.map((p) => ({
         value: p.id,
         label: p.name ?? "Unknow User"
